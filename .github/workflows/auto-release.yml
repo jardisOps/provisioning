@@ -28,7 +28,7 @@ jobs:
        startsWith(github.event.pull_request.head.ref, 'hotfix/'))
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.SHARED_CONFIG_TOKEN }}
           fetch-depth: 0
@@ -89,7 +89,7 @@ jobs:
       startsWith(github.event.pull_request.head.ref, 'feature/')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.SHARED_CONFIG_TOKEN }}
 
@@ -168,7 +168,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           token: ${{ secrets.SHARED_CONFIG_TOKEN }}
           fetch-depth: 0

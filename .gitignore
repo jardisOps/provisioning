@@ -1,0 +1,25 @@
+.DS_Store
+.idea/
+.claude/
+
+vendor/
+composer.lock
+tests/reports/
+
+*.tmp
+*.cache
+*.log
+.env
+.env.local
+.env.*.local
+
+# Test-Fixtures: .env Defaults committen, .env.local ignoriert (Pattern oben)
+!tests/fixtures/**/.env
+*.key
+support/secret.key
+
+# Test SSH keys
+tests/fixtures/hetzner/test_ssh_key.pub
+
+# State file (contains provider IDs)
+.provision-state.json

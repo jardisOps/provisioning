@@ -36,9 +36,10 @@
             "JardisOps\\Provisioning\\Tests\\": "tests/"
         }
     },
-    "homepage": "https://github.com/jardisops/provisioning",
+    "homepage": "https://jardis.io",
     "support": {
-        "issues": "https://github.com/jardisops/provisioning/issues",
+        "issues": "https://github.com/jardisOps/provisioning/issues",
+        "docs": "https://docs.jardis.io/en/devops/provisioning",
         "email": "jardisDev@headgent.com"
     },
     "keywords": [

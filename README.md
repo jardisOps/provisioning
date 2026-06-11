@@ -433,6 +433,14 @@ App-Projekt                  → Workloads deployen
 
 ---
 
+## Dokumentation
+
+Vollständige Dokumentation, Guides und Referenz:
+
+**[docs.jardis.io/en/devops/provisioning](https://docs.jardis.io/en/devops/provisioning)**
+
+---
+
 ## Lizenz
 
 MIT

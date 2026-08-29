@@ -8,7 +8,6 @@ use JardisOps\Provisioning\Service\Installer\ProjectInstaller;
 use JardisOps\Provisioning\Support\Data\Cluster;
 use JardisOps\Provisioning\Support\Data\DeploymentMode;
 use JardisOps\Provisioning\Support\Data\NodeRole;
-use JardisOps\Provisioning\Provisioner;
 use JardisOps\Provisioning\Support\Factory\ProvisionerFactory;
 use JardisSupport\DotEnv\DotEnv;
 use JardisSupport\Secret\Handler\SecretHandler;
@@ -23,10 +22,12 @@ use RuntimeException;
 final class Application
 {
     private readonly Output $output;
+    private readonly ResolveEnvPath $resolveEnvPath;
 
     public function __construct()
     {
         $this->output = new Output();
+        $this->resolveEnvPath = new ResolveEnvPath();
     }
 
     /**
@@ -77,7 +78,8 @@ final class Application
     private function provision(array $args): int
     {
         $dryRun = in_array('--dry-run', $args, true);
-        $config = $this->loadConfig($args);
+        $envPath = ($this->resolveEnvPath)($this->getOption($args, '--env-path'));
+        $config = $this->loadConfig($envPath);
 
         if ($dryRun) {
             $mode = $config['PROVISION_MODE'] ?? '';
@@ -87,7 +89,7 @@ final class Application
             return 0;
         }
 
-        $provisioner = $this->createProvisioner($config, $args);
+        $provisioner = ProvisionerFactory::create($config, $envPath);
         $cluster = $provisioner->provision($config);
 
         $this->output->success('Provisioning complete');
@@ -102,7 +104,8 @@ final class Application
     private function deprovision(array $args): int
     {
         $force = in_array('--force', $args, true);
-        $config = $this->loadConfig($args);
+        $envPath = ($this->resolveEnvPath)($this->getOption($args, '--env-path'));
+        $config = $this->loadConfig($envPath);
 
         if (!$force) {
             $this->output->warning('This will destroy ALL provisioned resources.');
@@ -110,7 +113,7 @@ final class Application
             return 1;
         }
 
-        $provisioner = $this->createProvisioner($config, $args);
+        $provisioner = ProvisionerFactory::create($config, $envPath);
         $provisioner->deprovision();
 
         $this->output->success('All resources destroyed');
@@ -123,9 +126,10 @@ final class Application
      */
     private function status(array $args): int
     {
-        $config = $this->loadConfig($args);
+        $envPath = ($this->resolveEnvPath)($this->getOption($args, '--env-path'));
+        $config = $this->loadConfig($envPath);
         $json = in_array('--json', $args, true);
-        $provisioner = $this->createProvisioner($config, $args);
+        $provisioner = ProvisionerFactory::create($config, $envPath);
         $cluster = $provisioner->status();
 
         if ($cluster === null) {
@@ -147,7 +151,8 @@ final class Application
      */
     private function addNode(array $args): int
     {
-        $config = $this->loadConfig($args);
+        $envPath = ($this->resolveEnvPath)($this->getOption($args, '--env-path'));
+        $config = $this->loadConfig($envPath);
         $name = $this->getOption($args, '--name');
         $role = $this->getOption($args, '--role');
         $type = $this->getOption($args, '--type') ?? 'cpx31';
@@ -158,7 +163,7 @@ final class Application
             return 1;
         }
 
-        $provisioner = $this->createProvisioner($config, $args);
+        $provisioner = ProvisionerFactory::create($config, $envPath);
         $cluster = $provisioner->addNode($config, $name, NodeRole::from($role), $type, $volumeSize);
 
         $this->output->success("Node '{$name}' added");
@@ -172,7 +177,8 @@ final class Application
      */
     private function removeNode(array $args): int
     {
-        $config = $this->loadConfig($args);
+        $envPath = ($this->resolveEnvPath)($this->getOption($args, '--env-path'));
+        $config = $this->loadConfig($envPath);
         $name = $this->getOption($args, '--name');
         $deleteVolume = in_array('--delete-volume', $args, true);
 
@@ -181,7 +187,7 @@ final class Application
             return 1;
         }
 
-        $provisioner = $this->createProvisioner($config, $args);
+        $provisioner = ProvisionerFactory::create($config, $envPath);
         $cluster = $provisioner->removeNode($name, $deleteVolume);
 
         $this->output->success("Node '{$name}' removed");
@@ -265,7 +271,7 @@ final class Application
           secret:encrypt-sodium  Encrypt a value (Sodium)
 
         Options:
-          --env-path=<path>  Path to .env files (default: current directory)
+          --env-path=<path>  Directory, or a .env.<name> file (sets APP_ENV=<name>) (default: cwd)
           --dry-run          Show what would be done without executing
           --force            Skip confirmation prompts
           --json             Output as JSON
@@ -295,38 +301,18 @@ final class Application
     }
 
     /**
-     * @param string[] $args
      * @return array<string, mixed>
      */
-    private function loadConfig(array $args): array
+    private function loadConfig(string $envPath): array
     {
-        $envPath = $this->getOption($args, '--env-path') ?? getcwd();
-        if ($envPath === false) {
-            throw new RuntimeException('Cannot determine working directory');
-        }
-
         $dotEnv = new DotEnv();
 
-        $keyFile = (string) $envPath . '/support/secret.key';
+        $keyFile = $envPath . '/support/secret.key';
         if (file_exists($keyFile)) {
             $dotEnv->addHandler(new SecretHandler(new FileKeyProvider($keyFile)), prepend: true);
         }
 
-        return $dotEnv->loadPrivate((string) $envPath);
-    }
-
-    /**
-     * @param array<string, mixed> $config
-     * @param string[] $args
-     */
-    private function createProvisioner(array $config, array $args): Provisioner
-    {
-        $envPath = $this->getOption($args, '--env-path') ?? getcwd();
-        if ($envPath === false) {
-            throw new RuntimeException('Cannot determine working directory');
-        }
-
-        return ProvisionerFactory::create($config, (string) $envPath);
+        return $dotEnv->loadPrivate($envPath);
     }
 
     /**

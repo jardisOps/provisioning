@@ -31,6 +31,7 @@ node-remove: ## Remove a node (NAME=... [DELETE_VOLUME=1])
 	$(PROVISION_BIN) node:remove --name=$(NAME) $(if $(DELETE_VOLUME),--delete-volume) $(ARGS)
 .PHONY: node-remove
 
+ifndef PROVISION_SKIP_SECRET_TARGETS
 <---secrets------>: ## -----------------------------------------------------------------------
 generate-key-file: ## Generate encryption key (support/secret.key)
 	$(PROVISION_BIN) secret:generate-key $(ARGS)
@@ -43,3 +44,4 @@ encrypt: ## Encrypt a value (VALUE=... [KEY_FILE=...])
 encrypt-sodium: ## Encrypt a value with Sodium (VALUE=... [KEY_FILE=...])
 	@$(PROVISION_BIN) secret:encrypt-sodium --value="$(VALUE)" $(if $(KEY_FILE),--key-file=$(KEY_FILE)) $(ARGS)
 .PHONY: encrypt-sodium
+endif

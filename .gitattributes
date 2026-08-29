@@ -27,7 +27,17 @@ composer.lock text eol=lf merge=union
 # Export-ignore (exclude from composer archive)
 /.github export-ignore
 /tests export-ignore
-/support export-ignore
+# support/makefile/provision.mk MUST ship: ProjectInstaller writes
+# `include vendor/jardisops/provisioning/support/makefile/provision.mk` into the
+# consumer's Makefile. Only the dev-only files under support/ are excluded.
+/support/docker-compose.yml export-ignore
+/support/pre-commit-hook.sh export-ignore
+/support/makefile/composer.mk export-ignore
+/support/makefile/docker.mk export-ignore
+/support/makefile/hooks.mk export-ignore
+/support/makefile/qa-stack.mk export-ignore
+/support/makefile/ssh.mk export-ignore
+/support/makefile/stack.mk export-ignore
 /.claude export-ignore
 /vendor export-ignore
 .idea export-ignore
@@ -35,7 +45,7 @@ composer.lock text eol=lf merge=union
 .dockerignore export-ignore
 .gitattributes export-ignore
 .gitignore export-ignore
-Makefile export-ignore
+/Makefile export-ignore
 phpcs.xml export-ignore
 phpstan.neon export-ignore
 phpunit.xml export-ignore

@@ -23,15 +23,19 @@ final class ProjectInstaller
 
     private const MAKEFILE_INCLUDE = 'include vendor/jardisops/provisioning/support/makefile/provision.mk';
 
+    private const SECRET_TARGETS = ['generate-key-file', 'encrypt', 'encrypt-sodium'];
+
     private readonly Output $output;
     private readonly string $projectRoot;
     private readonly string $packageRoot;
+    private readonly DetectMakeTargets $detectMakeTargets;
 
     public function __construct(string $projectRoot)
     {
         $this->output = new Output();
         $this->projectRoot = rtrim($projectRoot, '/');
         $this->packageRoot = dirname(__DIR__, 3);
+        $this->detectMakeTargets = new DetectMakeTargets();
     }
 
     public function install(): void
@@ -67,6 +71,7 @@ final class ProjectInstaller
     private function installMakefile(): void
     {
         $target = $this->projectRoot . '/Makefile';
+        $include = $this->makefileInclude($target);
 
         if (file_exists($target)) {
             $content = (string) file_get_contents($target);
@@ -75,14 +80,27 @@ final class ProjectInstaller
                 return;
             }
 
-            $content = rtrim($content) . "\n\n" . self::MAKEFILE_INCLUDE . "\n";
+            $content = rtrim($content) . "\n\n" . $include . "\n";
             file_put_contents($target, $content);
             $this->output->success('Updated Makefile — added provision.mk include');
             return;
         }
 
-        file_put_contents($target, self::MAKEFILE_INCLUDE . "\n");
+        file_put_contents($target, $include . "\n");
         $this->output->success('Created Makefile with provision.mk include');
+    }
+
+    private function makefileInclude(string $makefilePath): string
+    {
+        if (!($this->detectMakeTargets)($makefilePath, self::SECRET_TARGETS)) {
+            return self::MAKEFILE_INCLUDE;
+        }
+
+        $this->output->info(
+            'secret targets already present — skipped provision.mk secret targets'
+        );
+
+        return 'PROVISION_SKIP_SECRET_TARGETS := 1' . "\n" . self::MAKEFILE_INCLUDE;
     }
 
     private function installGitignore(): void

@@ -82,6 +82,14 @@ vendor/bin/provision provision --env-path=mein/pfad
 make provision ARGS="--env-path=mein/pfad"
 ```
 
+`--env-path` akzeptiert auch eine einzelne Datei nach dem Muster `.env.<name>`
+(z. B. `.env.provision`) — dann wird `APP_ENV=<name>` gesetzt und die DotEnv-Kaskade
+laedt das Verzeichnis der Datei inklusive der `.env.<name>`-Stufe:
+
+```bash
+vendor/bin/provision provision --env-path=.env.provision
+```
+
 ---
 
 ## Schnellstart: Single-Server mit Hetzner

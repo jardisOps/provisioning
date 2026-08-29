@@ -2,7 +2,35 @@
 
 declare(strict_types=1);
 
-require_once dirname(__DIR__) . '/vendor/autoload.php';
+$autoloadPath = null;
+
+if (isset($GLOBALS['_composer_autoload_path']) && is_string($GLOBALS['_composer_autoload_path'])) {
+    $composerAutoloadPath = $GLOBALS['_composer_autoload_path'];
+    if (file_exists($composerAutoloadPath)) {
+        $autoloadPath = $composerAutoloadPath;
+    }
+}
+
+if ($autoloadPath === null) {
+    $standaloneAutoloadPath = dirname(__DIR__) . '/vendor/autoload.php';
+    if (file_exists($standaloneAutoloadPath)) {
+        $autoloadPath = $standaloneAutoloadPath;
+    }
+}
+
+if ($autoloadPath === null) {
+    $installedAutoloadPath = dirname(__DIR__, 3) . '/autoload.php';
+    if (file_exists($installedAutoloadPath)) {
+        $autoloadPath = $installedAutoloadPath;
+    }
+}
+
+if ($autoloadPath === null) {
+    fwrite(STDERR, "Could not find Composer autoloader. Run 'composer install'.\n");
+    exit(1);
+}
+
+require_once $autoloadPath;
 
 $app = new \JardisOps\Provisioning\Service\Cli\Application();
 exit($app->run($argv));
